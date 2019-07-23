@@ -93,4 +93,19 @@ public class BufImgToMat {
            out.put(0, 0, data);
            return out;
      }
+    
+    public static BufferedImage MatToBufferedImage(Mat matrix) {
+        int type = BufferedImage.TYPE_BYTE_GRAY;
+        if (matrix.channels() > 1) {
+            type = BufferedImage.TYPE_3BYTE_BGR;
+        }
+        int bufferSize = matrix.channels() * matrix.cols() * matrix.rows();
+        byte[] buffer = new byte[bufferSize];
+        matrix.get(0, 0, buffer); // get all pixel from martix
+        BufferedImage image = new BufferedImage(matrix.cols(), matrix.rows(), type);
+        final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+        System.arraycopy(buffer, 0, targetPixels, 0, buffer.length);
+        return image;
+    }
+    
 }
