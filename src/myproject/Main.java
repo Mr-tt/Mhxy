@@ -21,11 +21,17 @@ import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.JTextField;
 
+
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.features2d.BFMatcher;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
+import test.te;
 import utils.BufImgToMat;
 import utils.Buzhuo;
 import utils.DrawInBufferedImg;
@@ -36,10 +42,10 @@ public class Main {
 	static JTextField text = new JTextField();
 
 	public static void main(String[] args) throws AWTException, IOException, InterruptedException {
-		 while(true) {
-		run();
-		Thread.sleep(6000);
-		 }
+		while (true) {
+			run();
+			Thread.sleep(6000);
+		}
 
 	}
 
@@ -61,13 +67,12 @@ public class Main {
 			BufferedImage warImage = r.createScreenCapture(rectangle); // 截图判断，是否有数字读秒
 			
 			boolean isDuMiao = judgeIsDuMiao(warImage);
-			if(isDuMiao) {
-				zhandou(warImage); // 战斗场景
-			}else {
-				//暂时不做事
+			if (isDuMiao) {
+				detectObject(warImage); // 战斗场景
+			} else {
+				// 暂时不做事
 			}
 		}
-
 
 	}
 
@@ -97,22 +102,60 @@ public class Main {
 				}
 			}
 		}
-		double cc =c;
-		double rate =(double) (cc/5400);
-		if(rate>0.05) {
+		double cc = c;
+		double rate = (double) (cc / 5400);
+		if (rate > 0.05) {
 			System.err.println("--正在读秒阶段-请快选择操作");
 			return true;
-		}else {
+		} else {
 			System.err.println("--正在非读秒阶段--");
 			return false;
 		}
 
 	}
 
-	/*
-	 * 战斗场景1.开始分析对面有几只大力
+	/**
+	 * 检测是否有目标怪物
+	 * 
+	 * @param bufferedImage
 	 */
-	private static void zhandou(BufferedImage buffImg) throws AWTException, IOException {
+	public static void detectObject(BufferedImage bufferedImage) {
+		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+		Mat source, template;
+		// 将文件读入为OpenCV的Mat格式
+		template = Imgcodecs.imread("/users/yehaitao/desktop/g1.png");
+		source = new BufImgToMat(bufferedImage,BufferedImage.TYPE_3BYTE_BGR,CvType.CV_8UC3).getMat();
+		
+
+		// 创建于原图相同的大小，储存匹配度
+		Mat result = Mat.zeros(source.rows() - template.rows() + 1, source.cols() - template.cols() + 1,
+				CvType.CV_32FC1);
+
+		// 调用模板匹配方法
+		Imgproc.matchTemplate(source, template, result, Imgproc.TM_SQDIFF_NORMED);
+		// 规格化
+		Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1);
+		// 获得最可能点，MinMaxLocResult是其数据格式，包括了最大、最小点的位置x、y
+		Core.MinMaxLocResult mlr = Core.minMaxLoc(result);
+		System.err.println(mlr.minVal + "--" + mlr.maxVal);
+		Point matchLoc = mlr.minLoc;
+		// 在原图上的对应模板可能位置画一个绿色矩形
+		Imgproc.rectangle(source, matchLoc, new Point(matchLoc.x + template.width(), matchLoc.y + template.height()),
+				new Scalar(0, 255, 255));
+		Imgcodecs.imwrite("/users/yehaitao/desktop/find/"+System.currentTimeMillis()+".png", source);
+		try {
+			Buzhuo.buzhuo(matchLoc.x+template.width()/2, matchLoc.y+template.height()/2);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.err.println("捕捉出错");
+			e.printStackTrace();
+		}
+	}
+
+	/*
+	 * old-三个位置的怪物分析-新版本已不适用 战斗场景1.开始分析对面有几只大力
+	 */
+	private static void Oldzhandou(BufferedImage buffImg) throws AWTException, IOException {
 		SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String dateStr = dateformat.format(System.currentTimeMillis());
 
@@ -137,9 +180,9 @@ public class Main {
 				new File("/Users/yehaitao/Desktop/three/" + dateformat.format(System.currentTimeMillis()) + "-2.jpg"));
 		ImageIO.write(subImg3, "jpg",
 				new File("/Users/yehaitao/Desktop/three/" + dateformat.format(System.currentTimeMillis()) + "-3.jpg"));
-		double res1 = FaceCompareMain.compare(subMat1, "/Users/yehaitao/Desktop/2.png");
-		double res2 = FaceCompareMain.compare(subMat2, "/Users/yehaitao/Desktop/2.png");
-		double res3 = FaceCompareMain.compare(subMat3, "/Users/yehaitao/Desktop/2.png");
+		double res1 = FaceCompareMain.compare(subMat1, "/Users/yehaitao/Desktop/2.jpg");
+		double res2 = FaceCompareMain.compare(subMat2, "/Users/yehaitao/Desktop/2.jpg");
+		double res3 = FaceCompareMain.compare(subMat3, "/Users/yehaitao/Desktop/2.jpg");
 		String[] ress = { String.valueOf(res1), String.valueOf(res2), String.valueOf(res3) };
 		DrawInBufferedImg.draw(buffImg,
 				"/Users/yehaitao/Desktop/draw/" + dateformat.format(System.currentTimeMillis()) + ".jpg", array, ress);

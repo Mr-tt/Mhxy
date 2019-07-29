@@ -19,6 +19,34 @@ import org.opencv.objdetect.CascadeClassifier;
 
 public class Buzhuo {
 	
+	
+	public static void buzhuo(double x,double y) throws Exception {
+		Robot r = new Robot();
+		
+		r.mouseMove((int)x, (int)y);
+		r.delay(908);
+		modifyMouse(166, 230);
+		
+		r.keyPress(157);//按下mac的commanded键
+		r.keyPress(KeyEvent.VK_G);
+		r.keyRelease(KeyEvent.VK_G);
+		r.keyRelease(157);
+		
+		r.delay(543);
+		r.mousePress(InputEvent.BUTTON1_MASK);
+		r.mouseRelease(InputEvent.BUTTON1_MASK);
+		r.delay(1000);
+		r.mouseMove(330, 350);//鼠标基准位
+		r.mousePress(InputEvent.BUTTON1_MASK);
+		r.mouseRelease(InputEvent.BUTTON1_MASK);
+	}
+	
+	/**
+	 * buzhuo-old
+	 * @param i
+	 * @throws AWTException
+	 * @throws IOException
+	 */
 	public static void buzhuo(int i) throws AWTException, IOException {
 		Robot r = new Robot();
 		if(i!=0) {
@@ -135,7 +163,7 @@ public class Buzhuo {
 	
 	
 	/**
-	 * 
+	 * 解决鼠标漂移
 	 * @param buffImg
 	 * @param x  鼠标的目的坐标
 	 * @param y
